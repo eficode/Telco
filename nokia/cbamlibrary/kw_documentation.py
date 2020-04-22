@@ -27,7 +27,10 @@ it from keyword arguments.
 *Arguments:*\n
 ``host`` CBAM host address\n
 ``client_id`` CBAM Client ID\n
-``client_secret`` CBAM Client secret
+``client_secret`` CBAM Client secret\n
+``kwargs`` Additional keyword arguments for [https://2.python-requests.org/en/v2.9.1|python requests],
+e.g. [https://2.python-requests.org/en/v2.9.1/user/advanced/#ssl-cert-verification|SSL Cert verification] (see examples below).
+These kwargs will be used for all requests made by the connection.
 
 *.env file example:*\n
 | HOST=localhost
@@ -41,4 +44,17 @@ _Using .env file only_
 | Connect To CBAM |
 _Using combination of keyword arguments and .env file_
 | Connect To CBAM | host=127.0.0.1 |
+_Using .env file and requests configuration kwargs (Disable SSL Cert verification)_
+| Connect To CBAM | verify=${False} |
+"""
+
+
+create_vnf = """Creates a new VNF using given VNF descriptor. Returns a JSON description of the created VNF.
+
+*Arguments:*\n
+``vnfd_id`` vnfdId of an onboarded VNF descriptor. List of available VNFDs can be fetched using keyword `Get VNFDs`.\n
+``name`` Name of the created VNF
+
+*Example:*\n
+| Create VNF | example-vnfd-id | Example VNF |
 """

@@ -15,38 +15,39 @@
 import requests
 
 class Connection:
-  def __init__(self, host, client_id, client_secret):
-    self.host = host
-    self.client_id = client_id
-    self.client_secret = client_secret
-    self.request_token()
+    def __init__(self, host, client_id, client_secret, **kwargs):
+        self.host = host
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.global_kwargs = kwargs
+        self.request_token()
 
-  def request_token(self, grant_type="client_credentials", options={}):
-    default = {
-      "grant_type": grant_type,
-      "client_id": self.client_id,
-      "client_secret": self.client_secret
-    }
-    response = requests.post("https://" + self.host + "/auth/realms/cbam/protocol/openid-connect/token", data={**default, **options}, verify=False)
-    if response.status_code != 200:
-      raise Exception("Token request failed: " + response.text)
-    self.access_token = response.json()["access_token"]
-    self.refresh_token = response.json()["refresh_token"]
+    def request_token(self, grant_type="client_credentials", options={}):
+        default = {
+        "grant_type": grant_type,
+        "client_id": self.client_id,
+        "client_secret": self.client_secret
+        }
+        response = requests.post("https://" + self.host + "/auth/realms/cbam/protocol/openid-connect/token", data={**default, **options}, **self.global_kwargs)
+        if response.status_code != 200:
+            raise Exception("Token request failed: " + response.text)
+        self.access_token = response.json()["access_token"]
+        self.refresh_token = response.json()["refresh_token"]
 
-  def refresh_access_token(self):
-    self.request_token(grant_type="refresh_token", options={"refresh_token": self.refresh_token})
+    def refresh_access_token(self):
+        self.request_token(grant_type="refresh_token", options={"refresh_token": self.refresh_token})
 
-  def request(self, method, path, **kwargs):
-    url = self.host + path
-    auth_header = {"Authorization": "Bearer " + self.access_token}
-    kwargs["headers"] = {**auth_header, **kwargs["headers"]} if "headers" in kwargs else auth_header
-    return getattr(requests, method)(url, **kwargs)
+    def request(self, method, path, **kwargs):
+        url = "https://" + self.host + path
+        auth_header = {"Authorization": "Bearer " + self.access_token}
+        kwargs["headers"] = {**auth_header, **kwargs["headers"]} if "headers" in kwargs else auth_header
+        return getattr(requests, method)(url, **kwargs, **self.global_kwargs)
 
-  def get(self, path, **kwargs):
-      return self.request("get", path, **kwargs)
+    def get(self, path, **kwargs):
+        return self.request("get", path, **kwargs)
 
-  def post(self, path, **kwargs):
-      return self.request("post", path, **kwargs)
+    def post(self, path, **kwargs):
+        return self.request("post", path, **kwargs)
 
-  def delete(self, path, **kwargs):
-      return self.request("delete", path, **kwargs)
+    def delete(self, path, **kwargs):
+        return self.request("delete", path, **kwargs)
