@@ -41,7 +41,9 @@ class Connection:
         url = "https://" + self.host + path
         auth_header = {"Authorization": "Bearer " + self.access_token}
         kwargs["headers"] = {**auth_header, **kwargs["headers"]} if "headers" in kwargs else auth_header
-        return getattr(requests, method)(url, **kwargs, **self.global_kwargs)
+        response = getattr(requests, method)(url, **kwargs, **self.global_kwargs)
+        response.raise_for_status()
+        return response
 
     def get(self, path, **kwargs):
         return self.request("get", path, **kwargs)
