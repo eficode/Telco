@@ -35,6 +35,9 @@ class CBAMLibrary:
         response = self.connection.post("/vnflcm/v1/vnf_instances", json={"vnfdId": vnfd_id, "vnfInstanceName": name})
         return response.json()
 
+    def delete_vnf(self, vnf_id):
+        self.connection.delete("/vnflcm/v1/vnf_instances/" + vnf_id)
+
     def disable_insecure_request_warning(self):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
