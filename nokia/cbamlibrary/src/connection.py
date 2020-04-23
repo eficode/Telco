@@ -28,7 +28,7 @@ class Connection:
         "client_id": self.client_id,
         "client_secret": self.client_secret
         }
-        response = requests.post("https://" + self.host + "/auth/realms/cbam/protocol/openid-connect/token", data={**default, **options}, **self.global_kwargs)
+        response = requests.post(f"https://{self.host}/auth/realms/cbam/protocol/openid-connect/token", data={**default, **options}, **self.global_kwargs)
         if response.status_code != 200:
             raise Exception("Token request failed: " + response.text)
         self.access_token = response.json()["access_token"]
@@ -38,8 +38,8 @@ class Connection:
         self.request_token(grant_type="refresh_token", options={"refresh_token": self.refresh_token})
 
     def request(self, method, path, **kwargs):
-        url = "https://" + self.host + path
-        auth_header = {"Authorization": "Bearer " + self.access_token}
+        url = f"https://{self.host}{path}"
+        auth_header = {"Authorization": f"Bearer {self.access_token}"}
         kwargs["headers"] = {**auth_header, **kwargs["headers"]} if "headers" in kwargs else auth_header
         response = getattr(requests, method)(url, **kwargs, **self.global_kwargs)
         response.raise_for_status()
