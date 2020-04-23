@@ -97,6 +97,15 @@ delete_vnf = """Deletes VNF by id.
 | Delete VNF | CBAM-1234abcde56789fghijklmn |
 """
 
+delete_vnfd = """Deletes VNFD by id.
+
+*Arguments:*\n
+``vnfd_id`` ID of the VNFD that will be deleted
+
+*Example:*\n
+| Delete VNFD | example-vnfd |
+"""
+
 
 disable_insecure_request_warning = """Disables urllib3.exceptions.InsecureRequestWarning which is printed on each 
 request when SSL Cert verification is disabled.
