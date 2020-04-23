@@ -18,18 +18,19 @@ import urllib3
 import kw_documentation
 from dotenv import load_dotenv
 from connection import Connection
-
+from catalog import Catalog
 
 class CBAMLibrary:
 
     ROBOT_LIBRARY_SCOPE = "GLOBAL"
 
-    def connect_to_cbam(self, host=None, client_id=None, client_secret=None, **kwargs):
+    def connect_to_cbam(self, host=None, client_id=None, client_secret=None, catalog_version="SOL005", **kwargs):
         load_dotenv()
         host = host or os.getenv("HOST")
         client_id = client_id or os.getenv("CLIENT_ID")
         client_secret = client_secret or os.getenv("CLIENT_SECRET")
         self.connection = Connection(host, client_id, client_secret, **kwargs)
+        self.catalog = Catalog._get_version(catalog_version)
 
     def create_vnf(self, vnfd_id, name):
         response = self.connection.post("/vnflcm/v1/vnf_instances", json={"vnfdId": vnfd_id, "vnfInstanceName": name})
@@ -39,29 +40,21 @@ class CBAMLibrary:
         self.connection.delete(f"/vnflcm/v1/vnf_instances/{vnf_id}")
 
     def delete_vnfd(self, vnfd_id):
-        self.connection.delete(f"/api/catalog/adapter/vnfpackages/{vnfd_id}")
+        self.connection.delete(f"{self.catalog.endpoint}/{vnfd_id}")
 
     def disable_insecure_request_warning(self):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def get_vnfs(self):
         response = self.connection.get("/vnflcm/v1/vnf_instances")
-        vnfs = response.json()
-        for vnf in vnfs:
-            vnf.pop("_links")
-        print(json.dumps(vnfs, indent=2))
-        return vnfs
+        return response.json()
 
     def get_vnfds(self):
-        response = self.connection.get("/api/catalog/adapter/vnfpackages")
-        vnfds = response.json()
-        for vnfd in vnfds:
-            vnfd.pop("links")
-        print(json.dumps(vnfds, indent=2))
-        return vnfds
+        response = self.connection.get(self.catalog.endpoint)
+        return response.json()
 
     def onboard_vnfd(self, vnfd):
-        response = self.connection.post("/api/catalog/adapter/vnfpackages", files= {"content": open(vnfd, "rb")})
+        response = self.connection.post(self.catalog.endpoint, files= {"content": open(vnfd, "rb")})
         return response.json()
 
 

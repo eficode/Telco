@@ -28,6 +28,7 @@ it from keyword arguments.
 ``host`` CBAM host address\n
 ``client_id`` CBAM Client ID\n
 ``client_secret`` CBAM Client secret\n
+``catalog_version`` Catalog API version, SOL005 by default. Supported versions are 'SOL005' and 'v18'\n
 ``kwargs`` Additional keyword arguments for [https://2.python-requests.org/en/v2.9.1|python requests],
 e.g. [https://2.python-requests.org/en/v2.9.1/user/advanced/#ssl-cert-verification|SSL Cert verification] (see examples below).
 These kwargs will be used for all requests made by the connection.
@@ -44,6 +45,8 @@ _Using .env file only_
 | Connect To CBAM |
 _Using combination of keyword arguments and .env file_
 | Connect To CBAM | host=127.0.0.1 |
+_Using Catalog API version 18_
+| Connect To CBAM | catalog_version=v18 |
 _Using .env file and requests configuration kwargs (Disable SSL Cert verification)_
 | Connect To CBAM | verify=${False} |
 """
@@ -112,7 +115,7 @@ request when SSL Cert verification is disabled.
 """
 
 
-get_vnfs = """Prints and returns a list of all VNFs.
+get_vnfs = """Returns a list of all VNFs.
 
 *Example:*\n
 _Log names of all VNF instances_
@@ -123,7 +126,7 @@ _Log names of all VNF instances_
 """
 
 
-get_vnfds = """Prints and returns a list of all VNFDs.
+get_vnfds = """Returns a list of all VNFDs.
 
 *Example:*\n
 _Log names of all VNFDs_
