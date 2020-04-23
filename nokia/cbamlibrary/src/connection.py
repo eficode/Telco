@@ -21,6 +21,7 @@ class Connection:
         self.client_secret = client_secret
         self.global_kwargs = kwargs
         self.request_token()
+        self.refresh_token_used = False
 
     def request_token(self, grant_type="client_credentials", options={}):
         default = {
@@ -36,13 +37,20 @@ class Connection:
 
     def refresh_access_token(self):
         self.request_token(grant_type="refresh_token", options={"refresh_token": self.refresh_token})
+        self.refresh_token_used = True
 
     def request(self, method, path, **kwargs):
         url = f"https://{self.host}{path}"
         auth_header = {"Authorization": f"Bearer {self.access_token}"}
         kwargs["headers"] = {**auth_header, **kwargs["headers"]} if "headers" in kwargs else auth_header
         response = getattr(requests, method)(url, **kwargs, **self.global_kwargs)
+        if response.status_code == 401 and not self.refresh_token_used:
+            self.refresh_access_token()
+            # Remove previous, expired auth header
+            kwargs["headers"].pop("Authorization")
+            return self.request(method, path, **kwargs)
         response.raise_for_status()
+        self.refresh_token_used = False
         return response
 
     def get(self, path, **kwargs):
