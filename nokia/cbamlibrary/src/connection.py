@@ -25,9 +25,9 @@ class Connection:
 
     def request_token(self, grant_type="client_credentials", options={}):
         default = {
-        "grant_type": grant_type,
-        "client_id": self.client_id,
-        "client_secret": self.client_secret
+            "grant_type": grant_type,
+            "client_id": self.client_id,
+            "client_secret": self.client_secret
         }
         response = requests.post(f"https://{self.host}/auth/realms/cbam/protocol/openid-connect/token", data={**default, **options}, **self.global_kwargs)
         if response.status_code != 200:
@@ -61,3 +61,6 @@ class Connection:
 
     def delete(self, path, **kwargs):
         return self.request("delete", path, **kwargs)
+
+    def patch(self, path, **kwargs):
+        return self.request("patch", path, **kwargs)

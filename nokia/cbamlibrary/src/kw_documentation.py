@@ -57,7 +57,8 @@ create_vnf = """Creates a new VNF using given VNF descriptor. Returns a JSON des
 *Arguments:*\n
 ``vnfd_id`` vnfdId of an onboarded VNF descriptor. List of all available VNFDs can be fetched using keyword `Get VNFDs`.
 VNFD ID can also be taken from the return value of `Onboard VNFD` keyword.\n
-``name`` Name of the created VNF
+``name`` Name of the created VNF\n
+``description`` Optional description of the VNF
 
 *Example return value:*\n
 | {
@@ -86,8 +87,9 @@ VNFD ID can also be taken from the return value of `Onboard VNFD` keyword.\n
 |     "metadata": {}
 | }
 
-*Example:*\n
+*Examples:*\n
 | Create VNF | example-vnfd-id | Example VNF |
+| Create VNF | example-vnfd-id | Example VNF | Example description |
 """
 
 
@@ -134,6 +136,79 @@ _Log names of all VNFDs_
 | FOR | ${VNFD} | IN | @{VNFDs} |
 | | LOG | ${VNFD}[name] |
 | END |
+"""
+
+
+modify_vnf = """Modifies existing VNF.
+
+*Arguments:*\n
+``vnf_id`` ID of the VNF that will be modified\n
+``modifications`` Changes in json format. Accepts dict, string and list types, see the examples.
+
+*Modifications model*:\n
+_All fields are optional_
+| {
+|   "vnfInstanceName": "Example",
+|   "vnfInstanceDescription": "Example",
+|   "metadata": {
+|     "example_key": "example value"
+|   },
+|   "vnfConfigurableProperties": {
+|     "example_key": "example value"
+|   },
+|   "extensions": {
+|     "example_key": "example value"
+|   },
+|   "vimConnectionInfo": [
+|     {
+|       "id": "example-abcd12345",
+|       "vimType": "OPENSTACK_V3",
+|       "interfaceInfo": {
+|         "endpoint": "https://example.test/example"
+|       },
+|       "accessInfo": {
+|         "username": "username",
+|         "password": "password",
+|         "region": "example",
+|         "tenant": "example",
+|         "project": "example",
+|         "userDomain": "example",
+|         "projectDomain": "example"
+|       }
+|     }
+|   ]
+| }
+
+*Examples:*\n
+Simple modifications are easy to do using BuiltIn
+[https://robotframework.org/robotframework/latest/libraries/BuiltIn.html#Create%20Dictionary|Create Dictionary] keyword,
+for example changing VNF name and description:
+| &{modifications} | Create Dictionary | vnfInstanceName=Modified name | vnfInstanceDescription=Modified description |
+| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | ${modifications} |
+
+However creating nested json objects with dicts can be cumbersome and non-readable, since every object needs to be created using the Create Dictionary
+keyword. For example changing VNF metadata requires creating the metadata object first and then assigning that as the value for metadata
+key in the outer object:
+| &{metadata} | Create Dictionary | firstkey=firstvalue | secondkey=secondvalue |
+| &{modifications} | Create Dictionary | metadata=${metadata} |
+| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | ${modifications} |
+
+To make using nested objects easier the modifications argument also supports stringified JSON. To provide a JSON string as an argument
+you can use [https://robotframework.org/robotframework/latest/libraries/BuiltIn.html#Set%20Variable|Set Variable] keyword or 
+[https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#variable-table|Variable table]. When splitting the string
+on multiple lines with Set Variable, Robot handles it as a list with each row as a separate item. Library will turn these lists to string
+format automatically. Here's the Set Variable version of the previous metadata example:
+| ${modifications}    Set Variable
+| ...  {
+| ...     "metadata": {
+| ...       "firstkey": "firstvalue",
+| ...       "secondkey": "secondvalue"
+| ...     }
+| ...  }
+| Modify VNF    CBAM-1234abcd5678efgh91011ijkl    ${modifications}
+
+It is also possible to use Robot Frameworks [https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#variable-files|variable files]
+which allows creating dictionaries using Python syntax.
 """
 
 

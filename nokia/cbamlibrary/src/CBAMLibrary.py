@@ -32,8 +32,14 @@ class CBAMLibrary:
         self.connection = Connection(host, client_id, client_secret, **kwargs)
         self.catalog = Catalog._get_version(catalog_version)
 
-    def create_vnf(self, vnfd_id, name):
-        response = self.connection.post("/vnflcm/v1/vnf_instances", json={"vnfdId": vnfd_id, "vnfInstanceName": name})
+    def create_vnf(self, vnfd_id, name, description=None):
+        payload = {
+            "vnfdId": vnfd_id,
+            "vnfInstanceName": name
+        }
+        if description is not None:
+            payload["vnfInstanceDescription"] = description
+        response = self.connection.post("/vnflcm/v1/vnf_instances", json=payload)
         return response.json()
 
     def delete_vnf(self, vnf_id):
@@ -52,6 +58,16 @@ class CBAMLibrary:
     def get_vnfds(self):
         response = self.connection.get(self.catalog.endpoint)
         return response.json()
+
+    def modify_vnf(self, vnf_id, modifications):
+        # Body can arrive in dict, string or list type. Dict doesn't require any changes, others need to be parsed into valid json.
+        # Multiline variables created with BuiltIns Set Variable are created as lists, turn them into a string
+        if isinstance(modifications, list):
+            modifications = "\n".join(modifications)
+        # Deserialize json strings
+        if isinstance(modifications, str):
+            modifications = json.loads(modifications)
+        response = self.connection.patch(f"/vnflcm/v1/vnf_instances/{vnf_id}", json=modifications)
 
     def onboard_vnfd(self, vnfd):
         response = self.connection.post(self.catalog.endpoint, files= {"content": open(vnfd, "rb")})
