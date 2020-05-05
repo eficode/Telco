@@ -112,8 +112,16 @@ delete_vnfd = """Deletes VNFD by id.
 """
 
 
-disable_insecure_request_warning = """Disables urllib3.exceptions.InsecureRequestWarning which is printed on each 
-request when SSL Cert verification is disabled.
+disable_insecure_request_warning = """Disables [https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings|InsecureRequestWarning] 
+which is printed on each request when SSL Cert verification is disabled.
+"""
+
+
+get_vnf_by_name = """Looks for a VNF with given name and returns it as a dictionary. Fails if no VNF is found.
+
+*Example:*\n
+| ${VNF} | Get VNF By Name | my-example-vnf |
+| Log | ${VNF}[id] | # Log VNF ID |
 """
 
 

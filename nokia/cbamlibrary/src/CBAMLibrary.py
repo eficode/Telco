@@ -51,6 +51,13 @@ class CBAMLibrary:
     def disable_insecure_request_warning(self):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+    def get_vnf_by_name(self, vnf_name):
+        vnfs = self.get_vnfs()
+        for vnf in vnfs:
+            if vnf["vnfInstanceName"] == vnf_name:
+                return vnf
+        raise ValueError(f"No VNF with name '{vnf_name}' was found.")
+
     def get_vnfs(self):
         response = self.connection.get("/vnflcm/v1/vnf_instances")
         return response.json()
