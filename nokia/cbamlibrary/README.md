@@ -5,4 +5,4 @@ Robot Framework library for Nokia CloudBand Application Manager
 Install requirements: `pip install -r requirements.txt`
 
 ## Generate Robot Framework keyword documentation
-```python -m robot.libdoc CBAMLibrary.py documentation.html```
+```python generate_documentation.py```
