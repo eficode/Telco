@@ -29,7 +29,14 @@ using OpenStackSDK methods that don't have a keyword implementation. See all met
 close_connection = """Closes current connection. A new connection is required before library keywords can be used again."""
 
 
-connect = """Creates new connection to the given cloud using clouds.yaml file and ``openstack.connect()`` factory function.
+connect = """Creates a new connection to the given cloud using clouds.yaml file and ``openstack.connect()`` factory function.
+
+Library tries to read environment variable OS_PASSWORD for password, set the variable to prevent passwords appearing in clouds.yaml.
+If environment variable is not set library will use password value from clouds.yaml. Password can also be given as a keyword argument,
+but *note that arguments will appear in plain text in the robot output files!*
+
+Priority order for the password argument is ``clouds.yaml > keyword argument > environment variable``. So if password is set using all
+different argument types at the same time the value defined in clouds.yaml will be used.
 
 OpenStackClient looks for a file called clouds.yaml in the following locations:
 - current directory
@@ -40,7 +47,8 @@ The first file found wins.
 See also [https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#clouds-yaml|OpenStacks documentation about clouds.yaml]
 
 *Arguments:*\n
-``cloud`` Name of the cloud as defined in clouds.yaml
+``cloud`` Name of the cloud as defined in clouds.yaml\n
+``kwargs`` Optional keyword arguments for connection constructor
 
 *Example:*
 | Connect | openstack |

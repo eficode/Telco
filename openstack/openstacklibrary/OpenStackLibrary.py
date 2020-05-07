@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import ast
 import json
 import openstack
@@ -29,8 +30,9 @@ class OpenStackLibrary:
         self.connection.close()
         self.connection = None
 
-    def connect(self, cloud):
-        self.connection = openstack.connect(cloud=cloud)
+    def connect(self, cloud, **kwargs):
+        password = kwargs.pop("password", None) or os.environ.get("OS_PASSWORD")
+        self.connection = openstack.connect(cloud=cloud, password=password, **kwargs)
 
     def create_aggregate(self, name, availability_zone=None):
         aggregate = self.connection.create_aggregate(name, availability_zone)
