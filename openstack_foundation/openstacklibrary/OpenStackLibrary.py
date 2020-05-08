@@ -16,7 +16,6 @@ import os
 import ast
 import json
 import openstack
-import kw_documentation
 
 class OpenStackLibrary:
 
@@ -94,16 +93,3 @@ class OpenStackLibrary:
 
     def update_security_group(self, security_group, **arguments):
         return self.connection.update_security_group(security_group, **arguments)
-
-
-def add_documentation(cls, documentation):
-    """Utility method for separating Robot documentation from keyword implementation."""
-    methods = list(filter(lambda x: not x.startswith("_"), dir(cls)))
-    for method_name in methods:
-        method = getattr(cls, method_name)
-        if callable(method):
-            name = method.__name__
-            if hasattr(documentation, name):
-                getattr(cls, name).__doc__ = getattr(documentation, name)
-
-add_documentation(OpenStackLibrary, kw_documentation)
