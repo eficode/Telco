@@ -56,8 +56,16 @@ class CBAMLibrary:
                 return vnf
         raise ValueError(f"No VNF with name '{vnf_name}' was found.")
 
+    def get_vnf(self, id):
+        response = self.connection.get(f"/vnflcm/v1/vnf_instances/{id}")
+        return response.json()
+
     def get_vnfs(self):
         response = self.connection.get("/vnflcm/v1/vnf_instances")
+        return response.json()
+
+    def get_vnfd(self, id):
+        response = self.connection.get(self.catalog.endpoint + f"/{id}")
         return response.json()
 
     def get_vnfds(self):
