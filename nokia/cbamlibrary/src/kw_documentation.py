@@ -12,6 +12,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+CBAMLibrary = """Robot Framework library for Nokia CloudBand Application Manager
+
+= Connecting to CBAM =
+
+A connection must be established before any CBAM REST API calls can be made. Since the scope of CBAMLibrary
+is global the connection will stay alive between test cases and test suites once initialized. See keyword
+`Connect To CBAM` for details on how to establish the connection. It is recommended to use
+[https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#suite-setup-and-teardown|Suite setup]
+and [https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#initialization-files|Initialization files]
+for creating the connection so it will be available when needed.
+
+= Timeouts =
+
+TODO
+
+= Passing JSON data to keywords =
+
+Some keywords like `Instantiate VNF` and `Modify VNF` require providing the request body in JSON format.
+Library supports multiple ways for passing the JSON data as a keyword argument: dicts, strings, lists
+([https://robotframework.org/robotframework/latest/libraries/BuiltIn.html#Set%20Variable|Set Variable]
+keyword splits multiline variables into a list) and json files.
+
+== JSON files ==
+If there is no need for dynamic values, a separate json file is easy and clean way for providing the data:
+| Instantiate VNF | CBAM-1234abcd5678efgh91011ijkl | path/to/the/instantiation.json |
+
+== Dicts ==
+Simple requests are fairly easy to do using BuiltIn
+[https://robotframework.org/robotframework/latest/libraries/BuiltIn.html#Create%20Dictionary|Create Dictionary] keyword,
+for example changing VNF name and description:
+| &{modifications} | Create Dictionary | vnfInstanceName=Modified name | vnfInstanceDescription=Modified description |
+| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | ${modifications} |
+
+However creating nested objects with dicts can be cumbersome and non-readable, since every object needs to be created using the Create Dictionary
+keyword. For example changing VNF metadata requires creating the metadata object first and then assigning that as the value for metadata
+key in the outer object:
+| &{metadata} | Create Dictionary | firstkey=firstvalue | secondkey=secondvalue |
+| &{modifications} | Create Dictionary | metadata=${metadata} |
+| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | ${modifications} |
+
+You can also use Robot Frameworks [https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#variable-files|variable files]
+which allow creating dictionaries using Python syntax.
+
+== JSON strings ==
+To make using nested objects easier the library also supports stringified JSON. To provide a JSON string as an argument
+you can use [https://robotframework.org/robotframework/latest/libraries/BuiltIn.html#Set%20Variable|Set Variable] keyword or
+[https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#variable-table|Variable table]. When splitting the string
+on multiple lines with Set Variable Robot handles it as a list with each row as a separate item. Library will convert these lists to string
+format automatically. Here's the Set Variable version of the previous metadata example:
+| ${modifications}    Set Variable
+| ...  {
+| ...     "metadata": {
+| ...       "firstkey": "firstvalue",
+| ...       "secondkey": "secondvalue"
+| ...     }
+| ...  }
+| Modify VNF    CBAM-1234abcd5678efgh91011ijkl    ${modifications}
+
+This kind of simple json object could be given as a single line string as well:
+| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | {"metadata": {"firstkey": "firstvalue", "secondkey": "secondvalue"}} |
+"""
+
 connect_to_cbam = """Initializes connection with the CBAM REST API.
 
 Gets authentication tokens required for accessing the API and creates a library connection object
@@ -117,7 +179,20 @@ which is printed on each request when SSL Cert verification is disabled.
 """
 
 
+get_vnf = """Looks for a VNF with given id and returns it as a dictionary. Fails if no VNF is found.
+
+*Arguments:*\n
+`vnf_id` ID of the VNF
+
+*Example:*\n
+| ${VNF} | Get VNF | CBAM-1234abcd5678efgh91011ijkl |
+"""
+
+
 get_vnf_by_name = """Looks for a VNF with given name and returns it as a dictionary. Fails if no VNF is found.
+
+*Arguments:*\n
+`vnf_name` Name of the VNF
 
 *Example:*\n
 | ${VNF} | Get VNF By Name | my-example-vnf |
@@ -136,6 +211,16 @@ _Log names of all VNF instances_
 """
 
 
+get_vnfd = """Looks for a VNFD with a given id and returns it as a dictionary. Fails if no VNFD is found.
+
+*Arguments:*\n
+`vnfd_id` ID of the VNFD
+
+*Example:*\n
+| ${VNFD} | Get VNFD | example-vnfd |
+"""
+
+
 get_vnfds = """Returns a list of all VNFDs.
 
 *Example:*\n
@@ -147,11 +232,22 @@ _Log names of all VNFDs_
 """
 
 
+instantiate_vnf = """Instantiates VNF with the given parameters.
+
+*Arguments:*\n
+``vnf_id`` ID of the VNF that will be instantiated\n
+``instantiation_json`` Instantiation data in json format, see `Passing JSON data to keywords`
+
+*Example:*\n
+| Instantiate VNF | CBAM-1234abcd5678efgh91011ijkl | path/to/the/instantiation.json |
+"""
+
+
 modify_vnf = """Modifies existing VNF.
 
 *Arguments:*\n
 ``vnf_id`` ID of the VNF that will be modified\n
-``modifications`` Changes in json format. Accepts dict, string and list types, see the examples.
+``modifications`` Changes in json format, see `Passing JSON data to keywords`
 
 *Modifications model*:\n
 _All fields are optional_
@@ -188,24 +284,14 @@ _All fields are optional_
 | }
 
 *Examples:*\n
-Simple modifications are easy to do using BuiltIn
-[https://robotframework.org/robotframework/latest/libraries/BuiltIn.html#Create%20Dictionary|Create Dictionary] keyword,
-for example changing VNF name and description:
+_JSON file:_
+| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | path/to/the/modifications.json |
+_Dict:_
 | &{modifications} | Create Dictionary | vnfInstanceName=Modified name | vnfInstanceDescription=Modified description |
 | Modify VNF | CBAM-1234abcd5678efgh91011ijkl | ${modifications} |
-
-However creating nested json objects with dicts can be cumbersome and non-readable, since every object needs to be created using the Create Dictionary
-keyword. For example changing VNF metadata requires creating the metadata object first and then assigning that as the value for metadata
-key in the outer object:
-| &{metadata} | Create Dictionary | firstkey=firstvalue | secondkey=secondvalue |
-| &{modifications} | Create Dictionary | metadata=${metadata} |
-| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | ${modifications} |
-
-To make using nested objects easier the modifications argument also supports stringified JSON. To provide a JSON string as an argument
-you can use [https://robotframework.org/robotframework/latest/libraries/BuiltIn.html#Set%20Variable|Set Variable] keyword or 
-[https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#variable-table|Variable table]. When splitting the string
-on multiple lines with Set Variable, Robot handles it as a list with each row as a separate item. Library will turn these lists to string
-format automatically. Here's the Set Variable version of the previous metadata example:
+_Single line string:_
+| Modify VNF | CBAM-1234abcd5678efgh91011ijkl | {"metadata": {"firstkey": "firstvalue", "secondkey": "secondvalue"}} |
+_Multi-line string:_
 | ${modifications}    Set Variable
 | ...  {
 | ...     "metadata": {
@@ -214,9 +300,6 @@ format automatically. Here's the Set Variable version of the previous metadata e
 | ...     }
 | ...  }
 | Modify VNF    CBAM-1234abcd5678efgh91011ijkl    ${modifications}
-
-It is also possible to use Robot Frameworks [https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#variable-files|variable files]
-which allows creating dictionaries using Python syntax.
 """
 
 
@@ -241,4 +324,47 @@ onboard_vnfd = """Uploads the VNF template package to the CBAM VNF catalog. Retu
 *Example:*\n
 | ${vnfd} | Onboard VNFD | /Users/Robot/Documents/project/vnfd.zip |
 | Log | ${vnfd}[vnfdId] | # Log the VNFD ID. This could be given as an argument for `Create VNF` keyword. |
+"""
+
+
+set_wait_until_timeout = """Sets the default timeout for Wait Until -keywords.
+
+*Arguments:*\n
+``timeout`` Default timeout in seconds
+"""
+
+
+terminate_vnf = """Terminates given VNF.
+
+*Arguments:*\n
+``vnf_id`` ID of the VNF\n
+``termination_type`` GRACEFUL (default) or FORCEFUL\n
+``graceful_termination_timeout`` Timeout for graceful termination in seconds\n
+``additional_params`` Additional parameters\n
+
+*Examples:*\n
+| Terminate VNF | CBAM-1234abcd5678efgh91011ijkl | termination_type=FORCEFUL |
+| Terminate VNF | CBAM-1234abcd5678efgh91011ijkl | graceful_termination_timeout=240 |
+"""
+
+
+wait_until_vnf_is_instantiated = """Waits until VNF is instantiated. Fails if VNF is not instantiated within timeout.
+
+*Arguments:*\n
+``vnf_id`` ID of the VNF\n
+``timeout`` Timeout, if not given the default timeout will be used. See `Timeouts`.
+
+*Example:*\n
+| Wait Until VNF Is Instantiated | CBAM-1234abcd5678efgh91011ijkl |
+"""
+
+
+wait_until_vnf_is_terminated = """Waits until VNF is terminated. Fails if VNF is not terminated within timeout.
+
+*Arguments:*\n
+``vnf_id`` ID of the VNF\n
+``timeout`` Timeout, if not given the default timeout will be used. See `Timeouts`.
+
+*Example:*\n
+| Wait Until VNF Is Terminated | CBAM-1234abcd5678efgh91011ijkl |
 """

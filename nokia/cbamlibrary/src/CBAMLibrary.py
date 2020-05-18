@@ -14,6 +14,7 @@
 
 import os
 import json
+import time
 import urllib3
 import requests
 from dotenv import load_dotenv
@@ -21,6 +22,7 @@ from dotenv import load_dotenv
 class CBAMLibrary:
 
     ROBOT_LIBRARY_SCOPE = "GLOBAL"
+    wait_until_timeout = 300
 
     def connect_to_cbam(self, host=None, client_id=None, client_secret=None, catalog_version="SOL005", **kwargs):
         load_dotenv()
@@ -49,6 +51,10 @@ class CBAMLibrary:
     def disable_insecure_request_warning(self):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+    def get_vnf(self, vnf_id):
+        response = self.connection.get(f"/vnflcm/v1/vnf_instances/{vnf_id}")
+        return response.json()
+
     def get_vnf_by_name(self, vnf_name):
         vnfs = self.get_vnfs()
         for vnf in vnfs:
@@ -60,22 +66,69 @@ class CBAMLibrary:
         response = self.connection.get("/vnflcm/v1/vnf_instances")
         return response.json()
 
+    def get_vnfd(self, vnfd_id):
+        response = self.connection.get(f"{self.catalog.endpoint}/{vnfd_id}")
+        return response.json()
+
     def get_vnfds(self):
         response = self.connection.get(self.catalog.endpoint)
         return response.json()
 
+    def instantiate_vnf(self, vnf_id, instantiation_json):
+        self.connection.post(f"/vnflcm/v1/vnf_instances/{vnf_id}/instantiate", self._parse_json_body(instantiation_json))
+
     def modify_vnf(self, vnf_id, modifications):
-        # Body can arrive in dict, string or list type. Dict doesn't require any changes, others need to be parsed into valid json.
-        # Multiline variables created with BuiltIns Set Variable are created as lists, turn them into a string
-        if isinstance(modifications, list):
-            modifications = "\n".join(modifications)
-        # Deserialize json strings
-        if isinstance(modifications, str):
-            modifications = json.loads(modifications)
-        response = self.connection.patch(f"/vnflcm/v1/vnf_instances/{vnf_id}", json=modifications)
+        return self.connection.patch(f"/vnflcm/v1/vnf_instances/{vnf_id}", data=self._parse_json_body(modifications))
 
     def onboard_vnfd(self, vnfd):
         return self.catalog.onboard_vnfd(vnfd)
+
+    def set_wait_until_timeout(self, timeout):
+        self.timeout = int(timeout)
+
+    def terminate_vnf(self, vnf_id, termination_type="GRACEFUL", graceful_termination_timeout=None, **additional_params):
+        payload = {
+            "terminationType": termination_type,
+            "additionalParams": additional_params
+        }
+        if graceful_termination_timeout is not None:
+            payload["gracefulTerminationTimeout"] = int(graceful_termination_timeout)
+        self.connection.post(f"/vnflcm/v1/vnf_instances/{vnf_id}/terminate", json=payload)
+
+    def wait_until_vnf_is_instantiated(self, vnf_id, timeout=None):
+        timeout = self.timeout if timeout is None else int(timeout)
+        self._poll_vnf_instantiation_status(vnf_id, "INSTANTIATED", timeout)
+
+    def wait_until_vnf_is_terminated(self, vnf_id, timeout=None):
+        timeout = self.timeout if timeout is None else int(timeout)
+        self._poll_vnf_instantiation_status(vnf_id, "NOT_INSTANTIATED", timeout)
+
+    def _parse_json_body(self, body):
+        # Body can be a dict, a json string, a string pointing to a json file or a list of lines of json string
+        # Multiline variables created with BuiltIns Set Variable are created as lists, turn them into a string
+        if isinstance(body, list):
+            body = "\n".join(body)
+        if isinstance(body, str):
+            # JSON file
+            if body.endswith(".json"):
+                return open(body, "rb")
+            # JSON string
+            return body
+        # Dict
+        return json.dumps(body)
+
+    def _poll_vnf_instantiation_status(self, vnf_id, status, timeout):
+        '''Polls VNF instantiation status every 5 seconds, blocks execution until status is correct or timeout is reached.'''
+        interval = 5
+        index = 0
+        while index * interval < timeout:
+            current_status = self.get_vnf(vnf_id)['instantiationState']
+            if current_status == status:
+                return
+            time.sleep(interval)
+            index += 1
+        raise Exception(f"VNF instantiation status did not change to {status} in {timeout} seconds")
+
 
 class Connection:
     def __init__(self, host, client_id, client_secret, **kwargs):
