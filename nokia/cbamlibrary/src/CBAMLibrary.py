@@ -75,7 +75,7 @@ class CBAMLibrary:
         return response.json()
 
     def instantiate_vnf(self, vnf_id, instantiation_json):
-        self.connection.post(f"/vnflcm/v1/vnf_instances/{vnf_id}/instantiate", self._parse_json_body(instantiation_json))
+        self.connection.post(f"/vnflcm/v1/vnf_instances/{vnf_id}/instantiate", data=self._parse_json_body(instantiation_json))
 
     def modify_vnf(self, vnf_id, modifications):
         return self.connection.patch(f"/vnflcm/v1/vnf_instances/{vnf_id}", data=self._parse_json_body(modifications))
