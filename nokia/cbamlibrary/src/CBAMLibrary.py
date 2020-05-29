@@ -97,11 +97,11 @@ class CBAMLibrary:
 
     def wait_until_vnf_is_instantiated(self, vnf_id, timeout=None, interval=5):
         timeout = self.timeout if timeout is None else int(timeout)
-        self._poll_vnf_instantiation_status(vnf_id, "INSTANTIATED", timeout)
+        self._poll_vnf_instantiation_status(vnf_id, "INSTANTIATED", timeout, interval)
 
     def wait_until_vnf_is_terminated(self, vnf_id, timeout=None, interval=5):
         timeout = self.timeout if timeout is None else int(timeout)
-        self._poll_vnf_instantiation_status(vnf_id, "NOT_INSTANTIATED", timeout)
+        self._poll_vnf_instantiation_status(vnf_id, "NOT_INSTANTIATED", timeout, interval)
 
     def _parse_json_body(self, body):
         # Body can be a dict, a json string, a string pointing to a json file or a list of lines of json string
