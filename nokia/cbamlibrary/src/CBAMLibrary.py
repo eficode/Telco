@@ -95,11 +95,11 @@ class CBAMLibrary:
             payload["gracefulTerminationTimeout"] = int(graceful_termination_timeout)
         self.connection.post(f"/vnflcm/v1/vnf_instances/{vnf_id}/terminate", json=payload)
 
-    def wait_until_vnf_is_instantiated(self, vnf_id, timeout=None):
+    def wait_until_vnf_is_instantiated(self, vnf_id, timeout=None, interval=5):
         timeout = self.timeout if timeout is None else int(timeout)
         self._poll_vnf_instantiation_status(vnf_id, "INSTANTIATED", timeout)
 
-    def wait_until_vnf_is_terminated(self, vnf_id, timeout=None):
+    def wait_until_vnf_is_terminated(self, vnf_id, timeout=None, interval=5):
         timeout = self.timeout if timeout is None else int(timeout)
         self._poll_vnf_instantiation_status(vnf_id, "NOT_INSTANTIATED", timeout)
 
@@ -117,9 +117,8 @@ class CBAMLibrary:
         # Dict
         return json.dumps(body)
 
-    def _poll_vnf_instantiation_status(self, vnf_id, status, timeout):
-        '''Polls VNF instantiation status every 5 seconds, blocks execution until status is correct or timeout is reached.'''
-        interval = 5
+    def _poll_vnf_instantiation_status(self, vnf_id, status, timeout, interval):
+        '''Polls VNF instantiation status on interval, blocks execution until status is correct or timeout is reached.'''
         index = 0
         while index * interval < timeout:
             current_status = self.get_vnf(vnf_id)['instantiationState']
@@ -210,7 +209,7 @@ class Catalog18:
         self.connection = connection
 
     def onboard_vnfd(self, vnfd):
-        response = self.connection.post(self.endpoint, files= {"content": open(vnfd, "rb")})
+        response = self.connection.post(self.endpoint, files={"content": open(vnfd, "rb")})
         return response.json()
 
 class Catalog:

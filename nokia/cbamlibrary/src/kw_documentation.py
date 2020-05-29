@@ -352,7 +352,8 @@ wait_until_vnf_is_instantiated = """Waits until VNF is instantiated. Fails if VN
 
 *Arguments:*\n
 ``vnf_id`` ID of the VNF\n
-``timeout`` Timeout, if not given the default timeout will be used. See `Timeouts`.
+``timeout`` Timeout, if not given the default timeout will be used. See `Timeouts`.\n
+``interval`` Time waited between the status polling requests in seconds, default is 5.
 
 *Example:*\n
 | Wait Until VNF Is Instantiated | CBAM-1234abcd5678efgh91011ijkl |
@@ -363,7 +364,8 @@ wait_until_vnf_is_terminated = """Waits until VNF is terminated. Fails if VNF is
 
 *Arguments:*\n
 ``vnf_id`` ID of the VNF\n
-``timeout`` Timeout, if not given the default timeout will be used. See `Timeouts`.
+``timeout`` Timeout, if not given the default timeout will be used. See `Timeouts`.\n
+``interval`` Time waited between the status polling requests in seconds, default is 5.
 
 *Example:*\n
 | Wait Until VNF Is Terminated | CBAM-1234abcd5678efgh91011ijkl |
