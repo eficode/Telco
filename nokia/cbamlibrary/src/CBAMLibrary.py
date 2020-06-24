@@ -51,6 +51,9 @@ class CBAMLibrary:
     def disable_insecure_request_warning(self):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+    def execute_custom_operation_on_vnf(self, vnf_id, custom_operation, body={}):
+        self.connection.post(f"/vnflcm/v1/vnf_instances/{vnf_id}/custom/{custom_operation}", data=self._parse_json_body(body))
+
     def get_vnf(self, vnf_id):
         response = self.connection.get(f"/vnflcm/v1/vnf_instances/{vnf_id}")
         return response.json()
@@ -82,6 +85,9 @@ class CBAMLibrary:
 
     def onboard_vnfd(self, vnfd):
         return self.catalog.onboard_vnfd(vnfd)
+
+    def set_connection_options(self, **options):
+        self.connection.global_kwargs = options
 
     def set_wait_until_timeout(self, timeout):
         self.timeout = int(timeout)

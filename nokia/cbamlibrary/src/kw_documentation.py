@@ -179,6 +179,18 @@ which is printed on each request when SSL Cert verification is disabled.
 """
 
 
+execute_custom_operation_on_vnf = """Executes a custom operation on given VNF. Custom operations are defined in the VNFD.
+
+*Arguments:*\n
+`vnf_id` ID of the VNF\n
+`custom_operation` Name of the custom operation\n
+`body` Optional body for the request, e.g. `{"additionalParams": {"param1": "value1"}}`. See `Passing JSON data to keywords`
+
+*Example:*\n
+| Execute Custom Operation On VNF | CBAM-1234abcd5678efgh91011ijkl | health_check |
+"""
+
+
 get_vnf = """Looks for a VNF with given id and returns it as a dictionary. Fails if no VNF is found.
 
 *Arguments:*\n
@@ -324,6 +336,17 @@ onboard_vnfd = """Uploads the VNF template package to the CBAM VNF catalog. Retu
 *Example:*\n
 | ${vnfd} | Onboard VNFD | /Users/Robot/Documents/project/vnfd.zip |
 | Log | ${vnfd}[vnfdId] | # Log the VNFD ID. This could be given as an argument for `Create VNF` keyword. |
+"""
+
+
+set_connection_options = """Sets the options used for all http requests made by the library. Any previously set options
+are erased and replaced with the new ones.
+
+*Arguments:*\n
+``options`` Options to be set as keyword arguments
+
+*Example:*\n
+| Set Connection Options | timeout=30 | verify=${false} |
 """
 
 
