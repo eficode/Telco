@@ -8,6 +8,8 @@ If you need any help with the keywords please for now mail us 5G.Sales@eficode.c
 
 Please submit any bugs, issues, and requests to https://github.com/eficode/telco/issues.
 
+For security issues, please email 5G.Sales@eficode.com instead of posting a public issue in GitHub.
+
 # License
 
 Copyright 2020 Eficode Oy
